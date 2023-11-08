@@ -147,14 +147,27 @@ const patchPlaces = async (req, res, next) => {
   };
 };
 
-const deletePlace = (req, res, next) => {
+const deletePlace = async (req, res, next) => {
   const placeId = req.params.pid;
-  const indexOfPlace = DUMMY_PLACES.findIndex((place) => place.id === placeId);
-  if (indexOfPlace < 0) {
-    throw new HttpError("we could not find the place you want to delete", 404);
-  }
-  DUMMY_PLACES.splice(indexOfPlace, 1);
-  res.status(201).json(DUMMY_PLACES);
+  let foundPlace;
+  Place.findById(placeId)
+    .then((response) => {
+      console.log(response);
+      foundPlace = response;
+      foundPlace
+        .deleteOne()
+        .then((res) => {
+          res.status(201).json({ message: `Delted ${placeId}` });
+        })
+        .catch((err) => {
+          next(new HttpError("error deleting", 404));
+        });
+    })
+    .catch((err) => {
+      next(
+        new HttpError("we could not find the place you want to delete", 404)
+      );
+    });
 };
 
 module.exports = {
