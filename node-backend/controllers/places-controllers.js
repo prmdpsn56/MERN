@@ -28,15 +28,23 @@ const DUMMY_PLACES = [
   },
 ];
 
-const getPlacesByUserId = (req, res, next) => {
+const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid;
-  const userPlaces = DUMMY_PLACES.filter((x) => x.creator === userId);
-  if (userPlaces.length > 0) {
-    res.json(200, { places: userPlaces });
-  } else {
-    const error = new HttpError(`No item found for ${userId} user id.`, 404);
-    next(error);
-  }
+  console.log(userId);
+  Place.find({ creator: userId })
+    .then((response) => {
+      if (response.length > 0) {
+        res.json(200, {
+          places: response.map((place) => place.toObject({ getters: true })),
+        });
+      } else {
+        res.json(200, { message: "No Places Found" });
+      }
+    })
+    .catch((err) => {
+      const error = new HttpError(`No item found for ${userId} user id.`, 404);
+      next(error);
+    });
 };
 
 const getPlacesByPlacesId = async (req, res, next) => {
