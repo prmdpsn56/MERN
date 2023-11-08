@@ -30,7 +30,6 @@ const DUMMY_PLACES = [
 
 const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid;
-  console.log(userId);
   Place.find({ creator: userId })
     .then((response) => {
       if (response.length > 0) {
@@ -62,7 +61,6 @@ const getPlacesByPlacesId = async (req, res, next) => {
 
 const createPlaces = async (req, res, next) => {
   const errors = validationResult(req);
-  console.log(errors.errors);
 
   if (errors.errors.length > 0) {
     const errorField = errors.errors.map((error) => error.path);
@@ -96,9 +94,8 @@ const createPlaces = async (req, res, next) => {
     });
 };
 
-const patchPlaces = (req, res, next) => {
+const patchPlaces = async (req, res, next) => {
   const errors = validationResult(req);
-  console.log(errors.errors);
 
   if (errors.errors.length > 0) {
     const errorField = errors.errors.map((error) => error.path);
@@ -106,22 +103,48 @@ const patchPlaces = (req, res, next) => {
       `Please enter a valid values for ${errorField.toString()}`,
       422
     );
-    throw errorMessage;
+    return next(errorMessage);
   }
 
   const { title, description } = req.body;
-  const placesId = req.params.pid;
+  const placeId = req.params.pid;
+  const errorNotFound = new HttpError(
+    `No item found for ${placeId} place id.`,
+    404
+  );
+  const error = new HttpError(`Error Occured`, 404);
+  let previousPlace;
+  Place.findById(placeId)
+    .then((result) => {
+      if (!!result || undefined) {
+        console.log("here");
+        return next(errorNotFound);
+      }
 
-  const foundIndex = DUMMY_PLACES.findIndex((place) => place.id === placesId);
+      previousPlace = result;
+      previousPlace.title = title;
+      previousPlace.description = description;
+      patchThePlace();
+    })
+    .catch((err) => {
+      console.log(1);
+      return next(error);
+    });
 
-  const updatePlace = {
-    title,
-    description,
+  console.log(previousPlace);
+
+  const patchThePlace = () => {
+    previousPlace
+      .save()
+      .then((response) => {
+        console.log(response);
+        res.status(201).json(response);
+      })
+      .catch((err) => {
+        console.log(2);
+        return next(error);
+      });
   };
-
-  DUMMY_PLACES[foundIndex] = { ...DUMMY_PLACES[foundIndex], ...updatePlace };
-
-  res.status(201).json(DUMMY_PLACES);
 };
 
 const deletePlace = (req, res, next) => {
