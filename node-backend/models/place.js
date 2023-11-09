@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose')
 
 const PlaceSchema = mongoose.Schema({
   title: { type: String, required: true },
@@ -10,6 +10,6 @@ const PlaceSchema = mongoose.Schema({
   },
   address: { type: String, required: true },
   creator: { type: String, required: true },
-});
+})
 
-module.exports = mongoose.model("Place", PlaceSchema);
+module.exports = mongoose.model('Place', PlaceSchema)
