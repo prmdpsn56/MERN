@@ -1,18 +1,14 @@
 const HttpError = require('../models/http-error')
 const uuid = require('uuid')
-const { validationResult } = require('express-validator')
+const User = require('../models/user');
+const { validationResult } = require('express-validator');
+const user = require('../models/user');
 
-const DUMMY_USERS = [
-  {
-    id: 1,
-    name: 'Paramdeep Singh',
-    email: 'singhparamdeep@gmail.com',
-    pass: 'test',
-  },
-]
 
-const signUpController = (req, res, next) => {
+const signUpController = async (req, res, next) => {
   const errors = validationResult(req)
+  const { name, email, password, image, places } = req.body
+  const createdUser = new User({ name, email, password, image, places });
 
   if (errors.errors.length > 0) {
     const errorField = errors.errors.map((error) => error.path)
@@ -20,55 +16,85 @@ const signUpController = (req, res, next) => {
       `Please enter a valid value for ${errorField.toString()}`,
       422
     )
-    throw errorMessage
+    next(errorMessage)
   }
 
-  const { name, email, password } = req.body
-
-  const alreadyThere = DUMMY_USERS.find((user) => user.email === email)
-
-  if (alreadyThere) {
-    res.status(200).json({
-      message: `user with email ${email} already exists, Please try a new email`,
-    })
+  let alreadyThere;
+  try {
+    alreadyThere = await User.findOne({ email: email });
+    // eslint-disable-next-line no-console
+    console.log('------------ User already exists information below---------')
+    // eslint-disable-next-line no-console
+    console.log(alreadyThere);
+    // eslint-disable-next-line no-console
+    if (alreadyThere) {
+      const error = new HttpError(`user ${email} already exists`);
+      return next(error);
+    }
+  } catch (err) {
+    const error = new HttpError('Sing up failed for the user,please try again later');
+    return next(error);
   }
 
-  const createdUser = {
-    id: uuid.v4(),
-    email,
-    name,
-    password,
+  try {
+    let result = await createdUser.save();
+    // eslint-disable-next-line no-console
+    res.status(200).json({ user: result.toObject({ getters: true }) })
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log(err);
+    const error = new HttpError('Sing up failed for the user,please try again later');
+    return next(error);
   }
-
-  DUMMY_USERS.push(createdUser)
-
-  res.status(200).json(DUMMY_USERS)
 }
 
-const logInController = (req, res, next) => {
+const logInController = async (req, res, next) => {
   const errors = validationResult(req)
-
-  if (errors.errors.length > 0) {
-    const errorField = errors.errors.map((error) => error.path)
-    const errorMessage = new HttpError(
-      `Please enter a valid value for ${errorField.toString()}`,
-      422
-    )
-    throw errorMessage
-  }
-
   const { email, password } = req.body
-  const identifiedUser = DUMMY_USERS.find((user) => user.email === email)
 
-  if (identifiedUser) {
-    res.status(200).json(identifiedUser)
+  if (errors.errors.length > 0) {
+    const errorField = errors.errors.map((error) => error.path)
+    const errorMessage = new HttpError(
+      `Please enter a valid value for ${errorField.toString()}`,
+      422
+    )
+    return next(errorMessage);
+  }
+
+
+  let exisitngUser;
+  try {
+    exisitngUser = await User.findOne({ email: email });
+    // eslint-disable-next-line no-console
+    console.log('------------ User already exists information below---------')
+    // eslint-disable-next-line no-console
+    console.log(exisitngUser);
+    if (exisitngUser.password !== password) {
+      return res.status(400).json({ message: "Invalid password Entered" });
+    }
+  } catch (err) {
+    const error = new HttpError('Sing up failed for the user,please try again later');
+    return next(error);
+  }
+
+  if (exisitngUser) {
+    res.status(200).json({ user: exisitngUser })
   } else {
-    throw new HttpError('User not found', 404)
+    return next(new HttpError(`User ${email} not found`, 404));
   }
 }
 
-const getUsers = (req, res, next) => {
-  res.status(200).json({ users: DUMMY_USERS })
+const getUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({}, '-__v -password ');
+    // eslint-disable-next-line no-console
+    console.log(users);
+    res.status(200).json({ users: users.map(user => user.toObject({ getters: true })) })
+  } catch (err) {
+    const error = new HttpError('Sing up failed for the user,please try again later');
+    return next(error);
+  }
+
 }
 
 module.exports = {

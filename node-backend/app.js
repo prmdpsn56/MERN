@@ -3,7 +3,7 @@ const bodyParser = require('body-parser')
 const placesRouter = require('./routes/places-routes')
 const usersRouter = require('./routes/users-routes')
 const HttpError = require('./models/http-error')
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const app = express()
 const url =
@@ -36,4 +36,5 @@ mongoose
   .then(() => {
     app.listen(8080)
   })
+  // eslint-disable-next-line no-console
   .catch((error) => console.log(error))

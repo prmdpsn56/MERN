@@ -8,6 +8,7 @@ router.get('/', usersController.getUsers)
 router.post(
   '/signup',
   [
+    check('name').isLength({ min: 1 }),
     check('email').normalizeEmail().isEmail(),
     check('password').isLength({ min: 6 }),
   ],
