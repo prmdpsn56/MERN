@@ -61,13 +61,12 @@ const createPlaces = async (req, res, next) => {
 
   try {
     user = await User.findById(creator);
-    console.log(user);
   } catch (err) {
-    next(new HttpError(err._message, 404))
+    return next(new HttpError(err._message, 404))
   }
 
   if (!user) {
-    next(new HttpError('No user found with this id', 404))
+    return next(new HttpError('No user found with this id', 404))
   }
 
 
@@ -79,7 +78,7 @@ const createPlaces = async (req, res, next) => {
     await user.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
-    next(new HttpError(err._message, 404))
+    return next(new HttpError(err._message, 404))
   }
 
 
