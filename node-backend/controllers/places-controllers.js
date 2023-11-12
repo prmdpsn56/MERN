@@ -1,6 +1,8 @@
 const HttpError = require('../models/http-error')
 const { validationResult } = require('express-validator')
 const Place = require('../models/place')
+const User = require('../models/user');
+const { default: mongoose } = require('mongoose');
 
 const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid
@@ -34,19 +36,9 @@ const getPlacesByPlacesId = async (req, res, next) => {
 }
 
 const createPlaces = async (req, res, next) => {
-  const errors = validationResult(req)
-
-  if (errors.errors.length > 0) {
-    const errorField = errors.errors.map((error) => error.path)
-    const errorMessage = new HttpError(
-      `Please enter a valid values for ${errorField.toString()}`,
-      422
-    )
-    next(errorMessage)
-  }
-
+  let user;
   const { title, description, location, address, creator } = req.body
-
+  const errors = validationResult(req);
   const createdPlace = new Place({
     title,
     description,
@@ -57,15 +49,49 @@ const createPlaces = async (req, res, next) => {
       'https://images.pexels.com/photos/2224861/pexels-photo-2224861.png?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
   })
 
+  if (errors.errors.length > 0) {
+    const errorField = errors.errors.map((error) => error.path)
+    const errorMessage = new HttpError(
+      `Please enter a valid values for ${errorField.toString()}`,
+      422
+    )
+    next(errorMessage)
+  }
+
+
+  try {
+    user = await User.findById(creator);
+    console.log(user);
+  } catch (err) {
+    next(new HttpError(err._message, 404))
+  }
+
+  if (!user) {
+    next(new HttpError('No user found with this id', 404))
+  }
+
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await createdPlace.save({ session: sess });
+    user.places.push(createdPlace);
+    await user.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    next(new HttpError(err._message, 404))
+  }
+
+
   // you can use unshift to add the place at the beginning of the array
-  createdPlace
-    .save()
-    .then((response) => {
-      res.status(201).json({ createPlace: response })
-    })
-    .catch((err) => {
-      next(new HttpError(err._message, 404))
-    })
+  // createdPlace
+  //   .save()
+  //   .then((response) => {
+  res.status(201).json({ createdPlace: createdPlace })
+  //   })
+  //   .catch((err) => {
+  //     next(new HttpError(err._message, 404))
+  //   })
 }
 
 const patchPlaces = async (req, res, next) => {

@@ -7,8 +7,8 @@ const user = require('../models/user');
 
 const signUpController = async (req, res, next) => {
   const errors = validationResult(req)
-  const { name, email, password, image, places } = req.body
-  const createdUser = new User({ name, email, password, image, places });
+  const { name, email, password, image } = req.body
+  const createdUser = new User({ name, email, password, image, places: [] });
 
   if (errors.errors.length > 0) {
     const errorField = errors.errors.map((error) => error.path)
