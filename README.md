@@ -2,19 +2,6 @@
 
 Welcome to our awesome MERN stack project! This repository contains a full-stack web application built with MongoDB, Express.js, React, and Node.js. Follow the instructions below to set up and run the application locally.
 
-## Table of Contents
-
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-- [Folder Structure](#folder-structure)
-- [Configuration](#configuration)
-- [Running the Application](#running-the-application)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Getting Started
-
 ### Prerequisites
 
 Make sure you have the following installed on your machine:
@@ -28,7 +15,7 @@ Make sure you have the following installed on your machine:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/awesome-mern-stack.git
+   git clone https://github.com/prmdpsn56/MERN.git
 
 2. Install dependencies:   
    cd MERN
