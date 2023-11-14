@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator')
 const Place = require('../models/place')
 const User = require('../models/user');
 const { default: mongoose } = require('mongoose');
+const place = require('../models/place');
 
 const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid
@@ -142,24 +143,58 @@ const patchPlaces = async (req, res, next) => {
 
 const deletePlace = async (req, res, next) => {
   const placeId = req.params.pid
-  let foundPlace
-  Place.findById(placeId)
-    .then((response) => {
-      // eslint-disable-next-line no-console
-      console.log(response)
-      foundPlace = response
-      foundPlace
-        .deleteOne()
-        .then((res) => {
-          res.status(201).json({ message: `Delted ${placeId}` })
-        })
-        .catch((err) => {
-          next(new HttpError('error deleting', 404))
-        })
-    })
-    .catch((err) => {
-      next(new HttpError('we could not find the place you want to delete', 404))
-    })
+  let foundPlace;
+  let places;
+  try {
+    foundPlace = await Place.findById(placeId).populate('creator');
+    // places = await User.findById(placeId).populate('places');
+    // console.log(places);
+    console.log(foundPlace)
+  } catch (err) {
+    const error = new HttpError('something went wrong please try again later', 404);
+    return next(error);
+  }
+
+  if (!foundPlace) {
+    const error = new HttpError('No user found', 404);
+    return next(error);
+  }
+
+  try {
+    console.log('qweqw');
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await foundPlace.deleteOne({ session: sess });
+    foundPlace.creator.places.pull(foundPlace);
+    await foundPlace.creator.save({ sessoin: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError('something went wrong please try again later', 404);
+    return next(error);
+  }
+
+
+
+  res.status(201).json({ message: `Delted ${placeId}` });
+
+  // Place.findById(placeId)
+  //   .then((response) => {
+  //     // eslint-disable-next-line no-console
+  //     console.log(response)
+  //     foundPlace = response
+  //     foundPlace
+  //       .deleteOne()
+  //       .then((res) => {
+  //         res.status(201).json({ message: `Delted ${placeId}` })
+  //       })
+  //       .catch((err) => {
+  //         next(new HttpError('error deleting', 404))
+  //       })
+  //   })
+  //   .catch((err) => {
+  //     next(new HttpError('we could not find the place you want to delete', 404))
+  //   })
 }
 
 module.exports = {
