@@ -8,7 +8,8 @@ const user = require('../models/user');
 const signUpController = async (req, res, next) => {
   const errors = validationResult(req)
   const { name, email, password, image } = req.body
-  const createdUser = new User({ name, email, password, image, places: [] });
+  console.log(req.body);
+  const createdUser = new User({ name, email, password, image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D", places: [] });
 
   if (errors.errors.length > 0) {
     const errorField = errors.errors.map((error) => error.path)
@@ -16,23 +17,23 @@ const signUpController = async (req, res, next) => {
       `Please enter a valid value for ${errorField.toString()}`,
       422
     )
-    next(errorMessage)
+    return next(errorMessage)
   }
 
   let alreadyThere;
   try {
     alreadyThere = await User.findOne({ email: email });
-    // eslint-disable-next-line no-console
-    console.log('------------ User already exists information below---------')
-    // eslint-disable-next-line no-console
-    console.log(alreadyThere);
-    // eslint-disable-next-line no-console
     if (alreadyThere) {
+      // eslint-disable-next-line no-console
+      console.log('------------ User already exists information below---------')
+      // eslint-disable-next-line no-console
+      console.log(alreadyThere);
+      // eslint-disable-next-line no-console
       const error = new HttpError(`user ${email} already exists`);
       return next(error);
     }
   } catch (err) {
-    const error = new HttpError('Sing up failed for the user,please try again later');
+    const error = new HttpError('Sign up failed for the user, please try again later');
     return next(error);
   }
 
@@ -73,7 +74,7 @@ const logInController = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid password Entered" });
     }
   } catch (err) {
-    const error = new HttpError('Sing up failed for the user,please try again later');
+    const error = new HttpError('Login failed for the user,please try again later');
     return next(error);
   }
 
