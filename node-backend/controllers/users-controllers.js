@@ -6,8 +6,9 @@ const user = require('../models/user');
 
 
 const signUpController = async (req, res, next) => {
-  const errors = validationResult(req)
-  const { name, email, password, image } = req.body
+  const errors = validationResult(req);
+  const { name, email, password, image } = req.body;
+  // eslint-disable-next-line no-console
   console.log(req.body);
   const createdUser = new User({ name, email, password, image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D", places: [] });
 
@@ -88,14 +89,11 @@ const logInController = async (req, res, next) => {
 const getUsers = async (req, res, next) => {
   try {
     const users = await User.find({}, '-__v -password ');
-    // eslint-disable-next-line no-console
-    console.log(users);
     res.status(200).json({ users: users.map(user => user.toObject({ getters: true })) })
   } catch (err) {
     const error = new HttpError('Sing up failed for the user,please try again later');
     return next(error);
   }
-
 }
 
 module.exports = {
