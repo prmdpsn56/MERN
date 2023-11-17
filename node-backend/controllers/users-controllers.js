@@ -80,7 +80,7 @@ const logInController = async (req, res, next) => {
   }
 
   if (exisitngUser) {
-    res.status(200).json({ user: exisitngUser })
+    res.status(200).json({ user: exisitngUser.toObject({ getters: true }) })
   } else {
     return next(new HttpError(`User ${email} not found`, 404));
   }
